@@ -44,6 +44,8 @@ public class Server
 	@OnOpen
 	public void openHandler(Session session)
 	{
+		System.out.println("Player joined!");
+
 		if (state == ServerState.WAITING_TO_START)
 		{
 			int i = 0;
