@@ -44,8 +44,6 @@ public class Server
 	@OnOpen
 	public void openHandler(Session session)
 	{
-		System.out.println("Player joined!");
-
 		if (state == ServerState.WAITING_TO_START)
 		{
 			int i = 0;
@@ -215,6 +213,8 @@ public class Server
 		@Override
 		public void process(Session session, int sourcePlayer)
 		{
+			System.out.println(state);
+
 			if (state == ServerState.IN_ROUND)
 				for (int i = 0; i < getMaxPlayers(); i++)
 				{
@@ -239,10 +239,8 @@ public class Server
 		@Override
 		public void process(Session session, int sourcePlayer)
 		{
-//			System.out.println("Got end of round packet");
 			if (state == ServerState.POST_ROUND)
 			{
-//				System.out.println("Processing end of round packet");
 				lastActions[sourcePlayer] = new Engine.Action[4];
 
 				for (int i = 0; i < 4; i++)
