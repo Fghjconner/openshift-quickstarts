@@ -121,7 +121,19 @@ public class Server
 		{
 			if (session != null)
 				session.getBasicRemote().sendObject(out);
-		} catch (IOException | EncodeException e)
+		} catch (IOException e)
+		{
+			try
+			{
+				session.close();
+			} catch (IOException e1)
+			{
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+			return false;
+		}
+		catch (EncodeException e)
 		{
 			try
 			{
