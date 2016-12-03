@@ -1,0 +1,980 @@
+<!-- <p>Created by the CSCE 315 team 12 Angry Bits</p> -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+	border:1px solid #d3d3d3;
+	
+}
+</style>
+</head>
+
+<!-- open the start menu upon loading the game -->
+<body onload="startMenu.open()">
+
+<div style="position:absolute;left:30%;top:10%;">
+
+	<!-- instantiate canvases and buttons-->
+	<canvas id="Menu" width="800" height="600" style="position:absolute;background-color: #8e0000;"></canvas>
+	<canvas id="Game" width="1000" height="800" style="position:absolute;left:-100px; visibility:hidden;background-color: #805480;"></canvas>
+	<canvas id="Help" width="800" height="600" style="position:absolute; visibility:hidden;background-color: #805480;"></canvas>
+
+	<!-- <button onmousedown="startMenu.close(); playGame.run()" >Start</button> -->
+	<div style="position:absolute; left:500px; top:325px;">
+		<input type="image" id="thing" value="Start" style="position:absolute;height:75px;width:300px;" src="image/Button_Start.png" onmousedown="startGame()"/>
+		<input type="image" id="thing2" value="Menu" style="position:absolute;height:75px;width:300px;top:125px;" src="image/Button_Help.png" onmousedown="helpMenu.open(); playGame.close();this.disabled=true;this.style.visibility='hidden';document.getElementById('thing').disabled=true;document.getElementById('thing').style.visibility='hidden';"/>
+	</div>
+
+</div>
+
+<script>
+
+//		#     #    #    ### #     #    #     # ####### #     # #     # 
+//		##   ##   # #    #  ##    #    ##   ## #       ##    # #     # 
+//		# # # #  #   #   #  # #   #    # # # # #       # #   # #     # 
+//		#  #  # #     #  #  #  #  #    #  #  # #####   #  #  # #     # 
+//		#     # #######  #  #   # #    #     # #       #   # # #     # 
+//		#     # #     #  #  #    ##    #     # #       #    ## #     # 
+//		#     # #     # ### #     #    #     # ####### #     #  #####  
+
+// declaring menu grahics
+var title = new Image();
+var socket = new WebSocket("ws://localhost:8080/PizzarizziaServer/game");
+// var socket = new WebSocket("ws://192.168.0.100:8080/PizzarizziaServer/game");
+var player_num = 0;
+var timerID;
+var timerCount;
+var backgroundColor = document.getElementById("Game").style.backgroundColor;
+
+// open web socket for client functions
+socket.onmessage = function(data)
+{
+	console.log('Received a message from the server!', data.data);
+
+	var packet = JSON.parse(data.data);
+	if (packet.type == "SHARE_PLAYER_ACTION" && packet.player != player_num)
+	{
+		for (var i = 0; i < packet.actions.length; i++)
+		{
+			playGame.turns[packet.player][i].type = actions[packet.actions[i].type];
+			playGame.turns[packet.player][i].direction = directions[packet.actions[i].direction];
+		}
+	}
+	else if (packet.type == "PLAYER_NUMBER_UPDATE")
+	{
+		player_num = packet.playerNumber;
+	}
+	else if (packet.type == "GRAPHICS")
+	{
+		graphics.processGraphics(packet);
+	}
+	else if (packet.type == "ROUND_END")
+	{
+		playGame.controlsActive = false;
+		playGame.stepKey = -1;
+		var packet = playGame.getTurnPacket(playGame.turns[player_num], "END_OF_ROUND_ACTIONS");
+
+		console.log(JSON.stringify(packet));
+		socket.send(JSON.stringify(packet));
+	}
+	else if (packet.type == "ROUND_START")
+	{
+		graphics.processRoundStart(packet);
+		playGame.resetCards();
+	}
+}
+
+// display the actual menu and allow it to be closed
+var startMenu = {
+	open: function()
+	{
+		var canvas = document.getElementById('Menu');
+		var context = canvas.getContext('2d');
+		canvas.style.visibility = "visible";
+		context.drawImage(title, 175, 100,450,225);
+	},
+
+	close: function()
+	{
+		var canvas = document.getElementById('Menu');
+		var context = canvas.getContext('2d');
+		canvas.style.visibility = "hidden";
+		context.clearRect(0, 0, canvas.width, canvas.height);
+	}
+}
+
+//		#     # ####### #     ######     #     # ####### #     # #     # 
+//		#     # #       #     #     #    ##   ## #       ##    # #     # 
+//		#     # #       #     #     #    # # # # #       # #   # #     # 
+//		####### ######  #     ######     #  #  # #####   #  #  # #     # 
+//		#     # #       #     #          #     # #       #   # # #     # 
+//		#     # #       #     #          #     # #       #    ## #     # 
+//		#     # ####### ##### #          #     # ####### #     #  #####  
+
+var helpMenu = {
+	// help menu information broken up into pages to avoid crowding
+	openPage1: function()	//page 1: intro and interface
+	{
+		var canvas = document.getElementById('Help');
+		var context = canvas.getContext('2d');
+		canvas.style.visibility = "visible";
+	},
+	//page 2: controls and mechanics page
+	//page 3: making a pizza
+	//page 4: stations and their functions
+	close: function()
+	{
+		var canvas = document.getElementById('Menu');
+		var context = canvas.getContext('2d');
+		canvas.style.visibility = "hidden";
+		context.clearRect(0, 0, canvas.width, canvas.height);
+	}
+
+}
+
+//		#     #  #####  ####### ####### #     # #          ####### #     # #     # #     #  #####  
+//		#     # #     # #       #       #     # #          #       ##    # #     # ##   ## #     # 
+//		#     # #       #       #       #     # #          #       # #   # #     # # # # # #       
+//		#     #  #####  #####   #####   #     # #          #####   #  #  # #     # #  #  #  #####  
+//		#     #       # #       #       #     # #          #       #   # # #     # #     #       # 
+//		#     # #     # #       #       #     # #          #       #    ## #     # #     # #     # 
+//		 #####   #####  ####### #        #####  #######    ####### #     #  #####  #     #  #####  
+                                                                                           
+var actionNames = ["MOVE", "THROW", "USE", "STAND"];
+var actions =
+{
+	MOVE : 0,
+	THROW : 1,
+	USE : 2,
+	STAND : 3
+}
+
+var directionNames = ["UP", "DOWN", "LEFT", "RIGHT", "NONE"];
+var directions =
+{
+	UP : 0,
+	DOWN : 1,
+	LEFT : 2,
+	RIGHT : 3,
+	NONE : 4
+}
+
+var keys = 
+{
+	LEFT : 37,
+	UP : 38,
+	RIGHT : 39,
+	DOWN : 40,
+	W : 87,
+	A : 65,
+	S : 83,
+	D : 68,
+}
+
+
+//		 #####     #    #     # #######     #####  ######     #    ######  #     # ###  #####   #####  
+//		#     #   # #   ##   ## #          #     # #     #   # #   #     # #     #  #  #     # #     # 
+//		#        #   #  # # # # #          #       #     #  #   #  #     # #     #  #  #       #       
+//		#  #### #     # #  #  # #####      #  #### ######  #     # ######  #######  #  #        #####  
+//		#     # ####### #     # #          #     # #   #   ####### #       #     #  #  #             # 
+//		#     # #     # #     # #          #     # #    #  #     # #       #     #  #  #     # #     # 
+//		 #####  #     # #     # #######     #####  #     # #     # #       #     # ###  #####   #####  
+
+//tiles
+var floor = new Image();
+var corner = new Image();
+var ovenLeft = new Image();
+var litOvenLeft = new Image();
+var ovenRight = new Image();
+var litOvenRight = new Image();
+var vMCounter = new Image();
+var vMCounterFlipped = new Image();
+var hMCounter = new Image();
+var hMCounterFlipped = new Image();
+var hEndCounter = new Image();
+var hEndCounterFlipped = new Image();
+var vEndCounter = new Image();
+var vEndCounterFlipped = new Image();
+var trash = new Image();
+var wall = new Image();
+var wallFront = new Image();
+
+var backgroundImage = new Image();
+
+//help menu
+var help = [new Image(), new Image(), new Image(), new Image(), new Image(),
+			new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image()];
+
+//ingredients
+var cheeseBowl = new Image();
+var meatBowl = new Image();
+var vegBowl = new Image();
+var doughBowl = new Image();
+var sauceBowl = new Image();
+
+//players
+var playerImages = [	[new Image(), new Image()],
+						[new Image(), new Image()],
+						[new Image(), new Image()],
+						[new Image(), new Image()]];
+
+var playerHoldingImages = [new Image(), new Image(), new Image(), new Image()]
+var playerStunnedImages = [new Image(), new Image(), new Image(), new Image()]
+
+//pizzas
+var rawDough = new Image();
+var cookedDough = new Image();
+var burntPizza = new Image();
+var cheeseTopping = new Image();
+var sauceTopping = new Image();
+var vegTopping = new Image();
+var meatTopping = new Image();
+
+//gameplay elements
+var cardImages = [new Image(), new Image(), new Image(), new Image()];
+
+var timerImage = new Image();
+
+var actionImages = [new Image(), new Image(), new Image(), new Image()];
+var arrowImages = [new Image(), new Image(), new Image(), new Image()];
+
+var cursorTL = new Image();
+var cursorTR = new Image();
+var cursorBL = new Image();
+var cursorBR = new Image();
+
+var orderCard = new Image();
+
+var ohNo = new Audio();
+var bgm = new Audio();
+
+var graphics =
+{
+	animationStartTime: performance.now(),
+	animationLength: 500,
+	postAnimationDelay: 500,
+
+	timerDuration: 0,
+	timerStartTime: performance.now(),
+
+	lastGCL: null,
+
+	orderCount: 0,
+
+	heldItems: [	[null, null, null, null],
+					[null, null, null, null],
+					[null, null, null, null],
+					[null, null, null, null]],
+
+	initialize: function()
+	{
+		document.getElementById('Game').style.visibility = "visible";
+
+		//Register drawgame function to be called prior to each frame rendering
+		window.requestAnimationFrame(graphics.drawGame);
+	},
+
+	processGraphics: function(packet)
+	{
+		graphics.animationStartTime = performance.now();
+		graphics.lastGCL = packet.data;
+
+		for(var step = 0; step < 4; step++)
+			for(var element of packet.data[step])
+				if (element.hasOwnProperty("player") && element.hasOwnProperty("held"))
+					graphics.heldItems[step][element.player] = element.held;
+	},
+
+	processRoundStart: function(packet)
+	{
+		graphics.timerDuration = packet.duration * 1000;
+		graphics.timerStartTime = performance.now();
+	},
+
+	drawGame: function(time)
+	{
+		var canvas = document.getElementById('Game');
+		var context = canvas.getContext('2d');
+
+		var animationTimeElapsed = time - graphics.animationStartTime;
+		var timerTimeElapsed = time - graphics.timerStartTime;
+
+		graphics.orderCount = 0;
+
+		context.clearRect(0, 0, canvas.width, canvas.height);
+
+		graphics.drawBackground(context);
+
+		graphics.drawMap(context);
+
+		graphics.drawTimer(context, timerTimeElapsed);
+
+
+		var step = Math.min(Math.floor(animationTimeElapsed/(graphics.animationLength + graphics.postAnimationDelay)), 3);
+		var timeInStep = animationTimeElapsed - (step * (graphics.animationLength + graphics.postAnimationDelay));
+
+		//Everything past this point is requires graphics from the server
+		if (graphics.lastGCL != null && step >= 0)
+		{
+
+			for(var i = 0; i < 4; i++)
+				graphics.drawCard(context, i, (i == player_num ? playGame.stepKey : -1), playGame.turns[i], graphics.heldItems[step][i]);
+
+
+			if (step < 0 || step > 3)
+			{
+				console.log(step);
+				console.log(animationTimeElapsed);
+				console.log(time);
+				console.log(graphics.animationStartTime);
+			}
+			for(var element of graphics.lastGCL[step])
+			{
+				switch(element.type)
+				{
+					case "stand":
+						graphics.drawStandingPlayer(context, element, timeInStep); break;
+					case "move":
+						graphics.drawMovingPlayer(context, element, timeInStep); break;
+					case "collide":
+						graphics.drawCollidingPlayer(context, element, timeInStep); break;
+					case "throw":
+						graphics.drawThrowingPlayer(context, element, timeInStep); break;
+					case "use":
+						graphics.drawUsingPlayer(context, element, timeInStep); break;
+					case "pick up":
+						graphics.drawGrabbingPlayer(context, element, timeInStep); break;
+					case "drop":
+						graphics.drawDroppingPlayer(context, element, timeInStep); break;
+					case "sit":
+						graphics.drawSittingItem(context, element, timeInStep); break;
+					case "order":
+						graphics.drawOrder(context, element, timeInStep); break;
+					default:
+						console.log("Unrecognized graphics type \"" + element.type + "\" recieved");
+				}
+			}
+		}
+
+		window.requestAnimationFrame(graphics.drawGame);
+	},
+
+	drawStandingPlayer: function(context, element, time)
+	{
+		var posX = 50 * (element.locationX + 1);
+		var posY = 50 * (element.locationY + 1);
+
+		graphics.drawPlayerWithIdle(context, element.player, posX, posY, element.held, element.stunnedAfter, time);
+	},
+
+	drawMovingPlayer: function(context, element, time)
+	{
+		var posX = 50 * (element.locationX + 1);
+		var posY = 50 * (element.locationY + 1);
+
+		var offset = 50 * Math.min(time / graphics.animationLength, 1);
+
+		switch(directions[element.direction])
+		{
+			case directions.UP: posY -= offset; break;
+			case directions.DOWN: posY += offset; break;
+			case directions.LEFT: posX -= offset; break;
+			case directions.RIGHT: posX += offset; break;
+		}
+
+		if (time <= graphics.animationLength)
+			graphics.drawPlayer(context, element.player, posX, posY, element.held, false, 0);
+		else
+			graphics.drawPlayerWithIdle(context, element.player, posX, posY, element.held, element.stunnedAfter, time);
+	},
+
+	drawCollidingPlayer: function(context, element, time)
+	{
+		graphics.drawStandingPlayer(context, element, time);
+	},
+
+	drawThrowingPlayer: function(context, element, time)
+	{
+		graphics.drawStandingPlayer(context, element, time);
+	},
+
+	drawUsingPlayer: function(context, element, time)
+	{
+		graphics.drawStandingPlayer(context,element,time);
+	},
+
+	drawGrabbingPlayer: function(context, element, time)
+	{
+		graphics.drawStandingPlayer(context,element,time);
+	},
+
+	drawDroppingPlayer: function(context, element, time)
+	{
+		graphics.drawStandingPlayer(context,element,time);
+	},
+
+	drawSittingItem: function(context, element, time)
+	{
+		if (element.locationY == 0 && (element.locationX == 3 || element.locationX == 4))
+		{
+			context.drawImage(litOvenLeft, mapStartX + (50 * 4), mapStartY + 50, 50, 50);
+			context.drawImage(litOvenRight, mapStartX + (50 * 5), mapStartY + 50, 50, 50);
+		}
+		else
+		{
+			var posX = 50 * (element.locationX + 1);
+			var posY = 50 * (element.locationY + 1);
+
+			graphics.drawItem(context, posX + 12, posY , element.item, 25);
+		}
+	},
+
+	drawOrder: function(context, element, time)
+	{
+		var ordersOffsetX = -175 + (125 * graphics.orderCount);
+		var ordersOffsetY = -175;
+
+		context.drawImage(orderCard, mapStartX + ordersOffsetX, mapStartY + ordersOffsetY, 100, 150);
+		graphics.drawItem(context, ordersOffsetX + 28, ordersOffsetY + 12, element.order, 44, 56);
+		
+		context.save();		
+		document.getElementById('Game').getContext('2d').font = "16px Harrington";
+
+		if (element.order.sauce)      context.fillText("sauce", mapStartX + ordersOffsetX + 20, mapStartY + ordersOffsetY+100);
+		if (element.order.cheese)     context.fillText("cheese", mapStartX + ordersOffsetX + 20, mapStartY + ordersOffsetY+115);
+		if (element.order.meat)       context.fillText("meat", mapStartX + ordersOffsetX + 20, mapStartY + ordersOffsetY+130);
+		if (element.order.vegetables) context.fillText("vegetables", mapStartX + ordersOffsetX + 20, mapStartY + ordersOffsetY+145);
+		
+		document.getElementById('Game').getContext('2d').font = "12px Harrington";
+		context.fillText(element.order.cooked, mapStartX + ordersOffsetX + 10, mapStartY + ordersOffsetY+89);
+
+		context.restore();
+
+		graphics.orderCount++;
+	},
+
+	drawBackground: function(context)
+	{
+		for (var x = 0; x < 3; x++)
+			for (var y = 0; y < 2; y++)
+				context.drawImage(backgroundImage, x * 416, y * 416, 416, 416);
+	},
+
+	drawMap: function(context)	// draws the game layout
+	{
+		// planning out the map
+		var map = [ [wall,      wallFront,   wallFront,          wallFront, wall,               wall,        wallFront, wallFront,          wall],
+					[wall,      corner,      hEndCounterFlipped, null,      ovenLeft,           ovenRight,   null,      null,               wall],
+					[wall,      vMCounter,   null,               null,      null,               null,        null,      vMCounterFlipped,   wall],
+					[wall,      vEndCounter, null,               null,      null,               null,        null,      vEndCounterFlipped, wall],
+					[wall,      null,        null,               null,      vMCounterFlipped,   vMCounter,   null,      null,               wall],
+					[wall,      trash,       null,               null,      vMCounterFlipped,   vMCounter,   null,      null,               wall],
+					[wall,      null,        null,               null,      vEndCounterFlipped, vEndCounter, null,      vMCounterFlipped,   wall],
+					[wall,      hEndCounter, hEndCounterFlipped, null,      null,               null,        null,      vEndCounterFlipped, wall],
+					[wall,      null,        null,               null,      null,               null,        null,      null,               wall],
+					[wallFront, wallFront,   wallFront,          wallFront, hMCounter,          hMCounter,   hMCounter, hMCounter,          wallFront]
+				];
+
+			//draw floor grid and stations on top of it
+		for(var y = 0; y < 10; y++)
+		{
+			for(var x = 0; x < 9; x++)
+			{
+				context.drawImage(floor, mapStartX+(x*50), mapStartY+(y*50),50,50);
+				if (map[y][x] != null)
+					context.drawImage(map[y][x],mapStartX+(50*x),mapStartY+(y*50),50,50);
+			}
+		}
+
+		//topping indicators
+		context.drawImage(cheeseBowl,mapStartX+95,mapStartY+50,22,28);
+		context.drawImage(sauceBowl,mapStartX+115,mapStartY+50,22,28);
+		context.drawImage(cheeseBowl,mapStartX+50,mapStartY+90,28,36);
+		context.drawImage(sauceBowl,mapStartX+50,mapStartY+130,28,36);
+
+		context.drawImage(meatBowl,mapStartX+371,mapStartY+90,28,36);
+		context.drawImage(meatBowl,mapStartX+371,mapStartY+130,28,36);
+
+		context.drawImage(vegBowl,mapStartX+371,mapStartY+300,28,36);
+		context.drawImage(vegBowl,mapStartX+371,mapStartY+340,28,36);
+
+		context.drawImage(doughBowl,mapStartX+60,mapStartY+340,28,36);
+		context.drawImage(doughBowl,mapStartX+110,mapStartY+340,28,36);
+
+		//timer
+		context.drawImage(timerImage, 800, 50, 51, 96);
+	},
+
+	drawCard: function(context, cardNumber, selected_step, turn, heldItem) // the uses keyboard input to draw cards nad player actions
+	{
+		context.drawImage(cardImages[cardNumber],mapStartX + cardOffsetsX[cardNumber],mapStartY + cardOffsetsY[cardNumber]);
+
+		//draw held item on player card
+		if (heldItem != null)
+		{
+			if(cardNumber == 0 || cardNumber == 2)
+			{
+				graphics.drawItem(context, cardOffsetsX[cardNumber] + 147, cardOffsetsY[cardNumber] + 50, heldItem, 33, 42);
+			}
+			else
+			{
+				graphics.drawItem(context, cardOffsetsX[cardNumber] + 20, cardOffsetsY[cardNumber] + 50, heldItem, 33, 42);
+			}
+
+			context.save();		
+			document.getElementById('Game').getContext('2d').font = "14px Harrington";2
+			context.fillText(heldItem.type, mapStartX + cardOffsetsX[cardNumber]+80, mapStartY + cardOffsetsY[cardNumber]+90);
+			context.restore();
+		}
+		// draws a highlighting border around the currently selected action panel on a player card
+		if (selected_step >= 0 && selected_step <= 3)
+		{
+			context.drawImage(cursorTL, mapStartX + cardOffsetsX[cardNumber] + .5 + (49*selected_step),mapStartY + cardOffsetsY[cardNumber] + 100,16,16);
+			context.drawImage(cursorTR, mapStartX + cardOffsetsX[cardNumber] + 36.5 + (49*selected_step),mapStartY + cardOffsetsY[cardNumber] + 100,16,16);
+			context.drawImage(cursorBL, mapStartX + cardOffsetsX[cardNumber] + .5 + (49*selected_step),mapStartY + cardOffsetsY[cardNumber] + 184,16,16);
+			context.drawImage(cursorBR, mapStartX + cardOffsetsX[cardNumber] + 36.5 + (49*selected_step),mapStartY + cardOffsetsY[cardNumber] + 184,16,16);
+		}
+
+		// draw actions and arrows on player cards based on player keyboard input
+
+		for (var step = 0; step < turn.length; step++)
+		{
+			// switch action picture
+			context.drawImage(actionImages[turn[step].type],  mapStartX + cardOffsetsX[cardNumber] + 7.5 + (49*step), mapStartY + cardOffsetsY[cardNumber] + 120, 40, 80);
+
+			if(turn[step].direction != directions.NONE)
+			{
+				context.drawImage(arrowImages[turn[step].direction], mapStartX + cardOffsetsX[cardNumber] + 7.5 + (49*step), mapStartY + cardOffsetsY[cardNumber] + 120, 40, 80);
+			}
+		}
+	},
+
+	idleDuration: 500,
+
+	drawPlayerWithIdle: function(context, playerNumber, posX, posY, heldItem, stunned, time)
+	{
+		var idleStage = Math.floor(time / graphics.idleDuration) % playerImages[playerNumber].length;
+
+		graphics.drawPlayer(context, playerNumber, posX, posY, heldItem, stunned, idleStage);
+	},
+
+	drawPlayer: function(context, playerNumber, posX, posY, heldItem, stunned, idleStage)	// draws player sprite
+	{
+		var absolutePosX = mapStartX + posX;
+		var absolutePosY = mapStartY + posY;
+
+		if (stunned)
+		{
+			context.drawImage(playerStunnedImages[playerNumber], absolutePosX, absolutePosY, 50, 50);
+		}
+		else if (heldItem != null)	
+		{
+			context.drawImage(playerHoldingImages[playerNumber], absolutePosX, absolutePosY, 50, 50);
+			graphics.drawItem(context, posX+25, posY+4, heldItem, 22, 28);
+		}
+		else
+		{
+			context.drawImage(playerImages[playerNumber][idleStage], absolutePosX, absolutePosY, 50, 50);
+		}
+	},
+		
+	drawItem: function(context, posX, posY, item, width, height)	//draws an item based on the passed name and places it into the hand of the player holding it
+	{
+		var absolutePosX = mapStartX + posX;
+		var absolutePosY = mapStartY + posY;
+
+		if (!height)
+			height = width;
+
+		if(item.type == "meat")
+		{
+			context.drawImage(meatBowl, absolutePosX, absolutePosY, width, height);
+		}
+		else if(item.type == "vegetables")
+		{
+			context.drawImage(vegBowl, absolutePosX, absolutePosY, width, height);
+		}
+		else if(item.type == "pizza")
+		{
+			if(item.cooked == "BURNT")
+			{
+				context.drawImage(burntPizza, absolutePosX, absolutePosY, width, height);
+			}
+			else
+			{
+				if(item.cooked == "RAW")
+				{
+					context.drawImage(rawDough, absolutePosX, absolutePosY, width, height);
+				}
+				else if(item.cooked == "COOKED")
+				{
+					context.drawImage(cookedDough, absolutePosX, absolutePosY, width, height);
+				}
+
+				if(item.sauce)
+				{
+					context.drawImage(sauceTopping, absolutePosX, absolutePosY, width, height);
+				}
+				if(item.cheese)
+				{
+					context.drawImage(cheeseTopping, absolutePosX, absolutePosY, width, height);
+				}
+				if(item.meat)
+				{
+					context.drawImage(meatTopping, absolutePosX, absolutePosY, width, height);
+				}
+				if(item.vegetables)
+				{
+					context.drawImage(vegTopping, absolutePosX, absolutePosY, width, height);
+				}
+			}
+		}
+	},
+
+	drawTimer: function(context, time)
+	{
+		context.save();
+		context.fillStyle = "#000000";
+
+		if (time < graphics.timerDuration)
+		{
+			var timerValue = Math.floor((graphics.timerDuration - time) / 1000);
+
+			context.fillText(timerValue, 860, 118);
+		}
+		else
+		{
+			context.fillText("--", 860, 118);
+		}
+
+		context.restore();
+	}
+}
+
+//		 #####     #    #     # ####### ######  #          #    #     # 
+//		#     #   # #   ##   ## #       #     # #         # #    #   #  
+//		#        #   #  # # # # #       #     # #        #   #    # #   
+//		#  #### #     # #  #  # #####   ######  #       #     #    #    
+//		#     # ####### #     # #       #       #       #######    #    
+//		#     # #     # #     # #       #       #       #     #    #    
+//		 #####  #     # #     # ####### #       ####### #     #    #    
+
+var mapStartX = 275;
+var mapStartY = 200;
+
+document.getElementById('Game').getContext('2d').font = "60px Harrington";
+
+var cardOffsetsX = [-232.5, 487.5, -232.5, 487.5];
+var cardOffsetsY = [0, 0, 250, 250];
+
+var startGame = function()
+{
+	//ohNo.play();
+	startMenu.close();
+	graphics.initialize();
+	playGame.run();
+
+	document.getElementById('thing').disabled=true;
+	document.getElementById('thing').style.visibility='hidden';
+
+	document.getElementById('thing2').disabled=true;
+	document.getElementById('thing2').style.visibility='hidden';
+}
+
+var playGame=
+{
+	run: function()
+	{
+		playGame.start();
+
+		playGame.userControls();
+		
+	},
+
+	start: function()	//basic window. the "rest state" for the game
+	{
+		//bgm.loop = true;
+		//bgm.play();
+
+		var canvas = document.getElementById('Game');
+		var context = canvas.getContext('2d');
+		canvas.style.visibility = "visible";
+
+		//signal server
+		socket.send(JSON.stringify({type: "START_GAME"}));
+	},
+
+	turns:	[
+				[
+				{step : 1, type : actions.STAND, direction : directions.NONE},
+				{step : 2, type : actions.STAND, direction : directions.NONE},
+				{step : 3, type : actions.STAND, direction : directions.NONE},
+				{step : 4, type : actions.STAND, direction : directions.NONE}					
+				],
+				[
+				{step : 1, type : actions.STAND, direction : directions.NONE},
+				{step : 2, type : actions.STAND, direction : directions.NONE},
+				{step : 3, type : actions.STAND, direction : directions.NONE},
+				{step : 4, type : actions.STAND, direction : directions.NONE}					
+				],
+				[
+				{step : 1, type : actions.STAND, direction : directions.NONE},
+				{step : 2, type : actions.STAND, direction : directions.NONE},
+				{step : 3, type : actions.STAND, direction : directions.NONE},
+				{step : 4, type : actions.STAND, direction : directions.NONE}					
+				],
+				[
+				{step : 1, type : actions.STAND, direction : directions.NONE},
+				{step : 2, type : actions.STAND, direction : directions.NONE},
+				{step : 3, type : actions.STAND, direction : directions.NONE},
+				{step : 4, type : actions.STAND, direction : directions.NONE}					
+				],
+			],
+
+	stepKey: -1,
+	controlsActive: false,
+
+	userControls: function() // takes user keyboard input
+	{
+		var canvas = document.getElementById('Game');
+		var context = canvas.getContext('2d');
+		
+		var steps = {
+    		STEP1 : 0,
+    		STEP2 : 1,
+    		STEP3 : 2,
+    		STEP4 : 3
+		}
+		
+		playGame.resetCards();
+
+		window.onkeydown = playGame.handleKeyPress;
+	},
+
+	handleKeyPress: function(event)
+	{
+		if (!playGame.controlsActive)
+			return;
+
+		var key = event.keyCode ? event.keyCode : event.which;
+		var updateServer = false;
+
+		var currentTurn = playGame.turns[player_num][playGame.stepKey];
+
+		//select step
+		//use keyboard input codes to determine button presses
+		if (key == keys.LEFT) 
+		{
+			playGame.stepKey = (playGame.stepKey + 3) % 4;	//decrement stepKey and loop from 0 to 3 if necessary
+		}
+		else if (key == keys.RIGHT) 
+		{
+			playGame.stepKey = (playGame.stepKey + 1) % 4;
+		}
+	
+		//select action
+		if (key == keys.DOWN) 
+		{
+			currentTurn.type = (currentTurn.type + 3) % 4;
+
+			updateServer = true;
+		}
+		else if (key == keys.UP) 
+		{
+			currentTurn.type = (currentTurn.type + 1) % 4;
+
+			updateServer = true;
+		}
+
+
+		if(key == keys.W)
+		{
+			currentTurn.direction = directions.UP;
+
+			updateServer = true;
+		}
+		else if(key == keys.S)
+		{
+			currentTurn.direction = directions.DOWN;
+
+			updateServer = true;
+		}
+		else if(key == keys.A)
+		{
+			currentTurn.direction = directions.LEFT;
+
+			updateServer = true;
+		}
+		else if(key == keys.D)
+		{
+			currentTurn.direction = directions.RIGHT;
+
+			updateServer = true;
+		}
+
+
+
+		if (currentTurn.type == actions.STAND)
+		{
+			currentTurn.direction = directions.NONE;
+		}
+		else if (currentTurn.direction == directions.NONE)
+		{
+			currentTurn.direction = directions.RIGHT;
+		}
+		
+
+		if (updateServer)
+		{
+			var packet = playGame.getTurnPacket(playGame.turns[player_num], "UPDATE_PLAYER_ACTION");
+
+			// socket.send(JSON.stringify(packet));
+			console.log(JSON.stringify(packet));
+		}
+	},
+
+	getTurnPacket: function(turn, typeString)	// creates a packet for sending turn information to the server
+	{
+		var packet = {actions:[{},{},{},{}], type:typeString};
+
+		for (var i = 0; i < turn.length; i ++)
+		{
+			packet.actions[i].type = actionNames[turn[i].type];
+			packet.actions[i].direction = directionNames[turn[i].direction];
+		}
+
+		return packet;
+	},
+	
+	resetCards: function()	// redraws each player card to a neutral selection after each round. 
+	//This makes selection less confusing and prevents players from accidentally making moves
+	{
+		var canvas = document.getElementById('Game');
+		var context = canvas.getContext('2d');
+
+		for(var i = 0; i < 4; i++)
+		{
+			playGame.turns[i] = [
+				{step : 1, type : actions.STAND, direction : directions.NONE},
+				{step : 2, type : actions.STAND, direction : directions.NONE},
+				{step : 3, type : actions.STAND, direction : directions.NONE},
+				{step : 4, type : actions.STAND, direction : directions.NONE}					
+			];
+		}
+
+		playGame.stepKey = 0;
+		playGame.controlsActive = true;
+	},
+
+	close: function()
+	{
+		var canvas = document.getElementById('Game');
+		var context = canvas.getContext('2d');
+		canvas.style.visibility = "hidden"; 
+		context.clearRect(0, 0, canvas.width, canvas.height);
+	}
+}
+
+//		 #####  ####### #     # ######   #####  #######    ######  #######  #####  #          #    ######     #    ####### ### ####### #     #  #####  
+//		#     # #     # #     # #     # #     # #          #     # #       #     # #         # #   #     #   # #      #     #  #     # ##    # #     # 
+//		#       #     # #     # #     # #       #          #     # #       #       #        #   #  #     #  #   #     #     #  #     # # #   # #       
+//		 #####  #     # #     # ######  #       #####      #     # #####   #       #       #     # ######  #     #    #     #  #     # #  #  #  #####  
+//		      # #     # #     # #   #   #       #          #     # #       #       #       ####### #   #   #######    #     #  #     # #   # #       # 
+//		#     # #     # #     # #    #  #     # #          #     # #       #     # #       #     # #    #  #     #    #     #  #     # #    ## #     # 
+//		 #####  #######  #####  #     #  #####  #######    ######  #######  #####  ####### #     # #     # #     #    #    ### ####### #     #  #####  
+
+//kitchen objects
+title.src = "image/Title_Redo.png";
+floor.src = "image/Tile_Floor.png";
+ovenLeft.src = "image/Tile_Oven_Redo.png";
+litOvenLeft.src = "image/Tile_Oven_Redo_Lit.png";
+ovenRight.src = "image/Tile_Oven_Redo_Flipped.png";
+litOvenRight.src = "image/Tile_Oven_Redo_Lit_Flipped.png";
+corner.src = "image/Tile_Table_Corner.png";
+vMCounter.src = "image/Tile_Table_V_Middle.png";
+vMCounterFlipped.src = "image/Tile_Table_V_Middle_Flipped.png";
+hMCounter.src = "image/Tile_Table_H_Middle.png";
+hEndCounter.src = "image/Tile_Table_H_End.png";
+hEndCounterFlipped.src = "image/Tile_Table_H_End_Flipped.png";
+vEndCounter.src = "image/Tile_Table_V_Bottom.png";
+vEndCounterFlipped.src = "image/Tile_Table_V_Bottom_Flipped.png";
+trash.src = "image/Tile_Trash_Can.png";
+wall.src = "image/Tile_Wall.png";
+wallFront.src = "image/Tile_Wall_Front.png";
+
+backgroundImage.src = "image/Tile_Background_2.png"
+
+cheeseBowl.src = "image/Bowl_Cheese.png";
+sauceBowl.src = "image/Bowl_Sauce.png";
+meatBowl.src = "image/Bowl_Meat.png";
+vegBowl.src = "image/Bowl_Veg.png";
+doughBowl.src = "image/Bowl_Dough.png";
+
+//help menu
+
+
+//players
+playerImages[0][0].src = "image/Player1.png";
+playerImages[1][0].src = "image/Player2.png";
+playerImages[2][0].src = "image/Player3.png";
+playerImages[3][0].src = "image/Player4.png";
+
+playerImages[0][1].src = "image/Player1_Idle.png";
+playerImages[1][1].src = "image/Player2_Idle.png";
+playerImages[2][1].src = "image/Player3_Idle.png";
+playerImages[3][1].src = "image/Player4_Idle.png";
+
+playerHoldingImages[0].src = "image/Player1_up.png";
+playerHoldingImages[1].src = "image/Player2_up.png";
+playerHoldingImages[2].src = "image/Player3_up.png";
+playerHoldingImages[3].src = "image/Player4_up.png";
+
+playerStunnedImages[0].src = "image/Player1_Stunned.png";
+playerStunnedImages[1].src = "image/Player2_Stunned.png";
+playerStunnedImages[2].src = "image/Player3_Stunned.png";
+playerStunnedImages[3].src = "image/Player4_Stunned.png";
+
+cardImages[0].src = "image/Player1_Info.png";
+cardImages[1].src = "image/Player2_Info.png";
+cardImages[2].src = "image/Player3_Info.png";
+cardImages[3].src = "image/Player4_Info.png";
+
+//pizzas
+rawDough.src = "image/Pizza_Raw.png";
+cookedDough.src = "image/Pizza_Cooked_Plain.png";
+meatTopping.src = "image/Pizza_Meat.png";
+vegTopping.src = "image/Pizza_Veg.png";
+cheeseTopping.src = "image/Pizza_Cheese.png";
+sauceTopping.src = "image/Pizza_Sauce.png";
+burntPizza.src = "image/Pizza_Burnt.png";
+
+//gameplay
+timerImage.src = "image/Action_Wait.png";
+
+actionImages[actions.STAND].src = "image/Action_Wait.png";
+actionImages[actions.USE].src = "image/Action_Interact.png";
+actionImages[actions.THROW].src = "image/Action_Throw.png";
+actionImages[actions.MOVE].src = "image/Action_Move.png";
+
+arrowImages[directions.LEFT].src = "image/Arrow_Left.png";
+arrowImages[directions.RIGHT].src = "image/Arrow_Right.png";
+arrowImages[directions.UP].src = "image/Arrow_Up.png";
+arrowImages[directions.DOWN].src = "image/Arrow_Down.png";
+
+cursorTL.src = "image/Cursor_Top_Left.png";
+cursorTR.src = "image/Cursor_Top_Right.png";
+cursorBL.src = "image/Cursor_Bottom_Left.png";
+cursorBR.src = "image/Cursor_Bottom_Right.png";
+
+orderCard.src = "image/Pizza_Info.png";
+
+//sound files
+ohNo.src = "OhNo.mp3";
+// bgm.src = "NoSpeakAmericano.mp3";
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------//
+</script>
+</body>
+</html>
