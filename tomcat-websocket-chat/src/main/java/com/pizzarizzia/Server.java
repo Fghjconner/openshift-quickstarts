@@ -160,6 +160,7 @@ public class Server
 		public void run()
 		{
 			state = ServerState.IN_ROUND;
+			System.out.println(state.name());
 
 			endOfRoundTimer.schedule(new EndRoundTask(), 20000);
 
