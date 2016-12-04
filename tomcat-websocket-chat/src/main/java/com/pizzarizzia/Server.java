@@ -160,7 +160,6 @@ public class Server
 		public void run()
 		{
 			state = ServerState.IN_ROUND;
-			System.out.println(state.name());
 
 			endOfRoundTimer.schedule(new EndRoundTask(), 20000);
 
@@ -214,8 +213,6 @@ public class Server
 		@Override
 		public void process(Session session, int sourcePlayer)
 		{
-			System.out.println(state);
-
 			if (state == ServerState.IN_ROUND)
 				for (int i = 0; i < getMaxPlayers(); i++)
 				{

@@ -830,7 +830,7 @@ var playGame=
 		{
 			var packet = playGame.getTurnPacket(playGame.turns[player_num], "UPDATE_PLAYER_ACTION");
 
-			// socket.send(JSON.stringify(packet));
+			socket.send(JSON.stringify(packet));
 			console.log(JSON.stringify(packet));
 		}
 	},
