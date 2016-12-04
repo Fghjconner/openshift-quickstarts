@@ -23,9 +23,9 @@
   metadata-complete="true">
 
     <description>
-      Chat websocket example
+      Panic at the Pizzarizzia Game
     </description>
-    <display-name>Chat websocket example</display-name>
+    <display-name>Panic at the Pizzarizzia</display-name>
 
     <welcome-file-list>
         <welcome-file>panic_at_the_pizzaria.html</welcome-file>
