@@ -522,11 +522,11 @@ public class Engine
 								else if (!isValidLocation(nextLoc) || (getTile(nextLoc) != Tile.EMPTY && getTile(nextLoc) != Tile.COUNTER && getTile(nextLoc) != Tile.OVEN) || getTile(flightLoc) == Tile.OVEN)
 								{
 									setItem(flightLoc, currentPizza);
-									graphics.add(currentStep, new GraphicsCommunicationObject.FlyElement(currentLoc.x, currentLoc.y, currentPizza.flightDirection, distance, currentPizza.makeGraphicsItem()));
 									impacted = true;
 								}
 								flightLoc = nextLoc;
 							}
+							graphics.add(currentStep, new GraphicsCommunicationObject.FlyElement(currentLoc.x, currentLoc.y, currentPizza.flightDirection, distance, currentPizza.makeGraphicsItem()));
 
 							currentPizza.flightDirection = Direction.NONE;
 						}
