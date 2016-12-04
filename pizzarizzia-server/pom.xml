@@ -19,7 +19,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.openshift.cloudenablement.eap</groupId>
-    <artifactId>websocket-chat</artifactId>
+    <artifactId>websocket-test</artifactId>
     <version>1.2.0.Final</version>
     <packaging>war</packaging>
     <name>Tomcat websocket example</name>
