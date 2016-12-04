@@ -477,8 +477,6 @@ public class Engine
 	//Preforms action independent updates to the world (eg. removing delivered pizzas, pizzas cooking, pizzas flying, player collisions)
 	private void updateWorld(int currentStep, Action[][] actions, GraphicsCommunicationObject graphics)
 	{
-		while (handleCollision(currentStep, actions, graphics));
-
 		for (int y = 0; y < map.length; y++)
 			for (int x = 0; x < map[0].length; x++)
 			{
@@ -506,7 +504,7 @@ public class Engine
 							int distance = 0;
 							Location flightLoc = new Location(currentLoc);
 							boolean impacted = false;
-							while(impacted)
+							while(!impacted)
 							{
 								flightLoc = flightLoc.getAdjacent(currentPizza.flightDirection);
 								distance++;
@@ -554,6 +552,8 @@ public class Engine
 		{
 			orders.add(Pizza.randomPizza());
 		}
+
+		while (handleCollision(currentStep, actions, graphics));
 	}
 
 	private void stunPlayer(int playerNumber, int currentStep, Action[][] actions)
