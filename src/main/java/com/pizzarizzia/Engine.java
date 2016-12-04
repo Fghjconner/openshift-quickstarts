@@ -503,7 +503,7 @@ public class Engine
 						{
 							setItem(currentLoc, null);
 
-							int distance = 0;
+							int distance = -1;
 							Location flightLoc = new Location(currentLoc);
 							boolean impacted = false;
 							while(!impacted)
@@ -527,6 +527,8 @@ public class Engine
 								}
 								flightLoc = nextLoc;
 							}
+
+							currentPizza.flightDirection = Direction.NONE;
 						}
 						else
 						{
