@@ -45,7 +45,7 @@
   <profiles>
 
     <!-- Configure the JBoss GA Maven repository -->
-    <profile>
+ <!--    <profile>
       <id>jboss-ga-repository</id>
       <repositories>
         <repository>
@@ -72,7 +72,6 @@
         </pluginRepository>
       </pluginRepositories>
     </profile>
-    <!-- Configure the JBoss Early Access Maven repository -->
     <profile>
       <id>jboss-earlyaccess-repository</id>
       <repositories>
@@ -99,14 +98,14 @@
           </snapshots>
         </pluginRepository>
       </pluginRepositories>
-    </profile>
+    </profile> -->
 
   </profiles>
 
   <activeProfiles>
     <!-- Optionally, make the repositories active by default -->
-    <activeProfile>jboss-ga-repository</activeProfile>
-    <activeProfile>jboss-earlyaccess-repository</activeProfile>
+   <!--  <activeProfile>jboss-ga-repository</activeProfile>
+    <activeProfile>jboss-earlyaccess-repository</activeProfile> -->
   </activeProfiles>
 
 </settings>
