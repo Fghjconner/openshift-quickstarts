@@ -41,8 +41,8 @@ canvas {
 
 // declaring menu grahics
 var title = new Image();
-// var socket = new WebSocket("ws://localhost:8080/PizzarizziaServer/game");
-var socket = new WebSocket("ws://test-test-project-fghj.44fs.preview.openshiftapps.com/websocket-chat/game");
+var socket = new WebSocket("ws://test-test-project-fghj.44fs.preview.openshiftapps.com/pizzarizzia-server/game");
+// var socket = new WebSocket("ws://192.168.0.100:8080/PizzarizziaServer/game");
 var player_num = 0;
 var timerID;
 var timerCount;
@@ -90,6 +90,8 @@ socket.onmessage = function(data)
 var startMenu = {
 	open: function()
 	{
+		//var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
 		var canvas = document.getElementById('Menu');
 		var context = canvas.getContext('2d');
 		canvas.style.visibility = "visible";
@@ -205,7 +207,11 @@ var backgroundImage = new Image();
 
 //help menu
 var help = [new Image(), new Image(), new Image(), new Image(), new Image(),
-			new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image(),new Image()];
+			new Image(), new Image(), new Image(), new Image(), new Image(),
+			new Image(), new Image(), new Image(), new Image(), new Image(),
+			new Image(), new Image(), new Image(), new Image(), new Image(),
+			new Image(), new Image(), new Image(), new Image(), new Image(),
+			new Image(), new Image()];
 
 //ingredients
 var cheeseBowl = new Image();
@@ -247,7 +253,7 @@ var cursorBR = new Image();
 
 var orderCard = new Image();
 
-// var ohNo = new Audio();
+var ohNo = new Audio();
 var bgm = new Audio();
 
 var graphics =
@@ -392,6 +398,7 @@ var graphics =
 
 	drawCollidingPlayer: function(context, element, time)
 	{
+		ohNo.play();
 		graphics.drawStandingPlayer(context, element, time);
 	},
 
@@ -912,9 +919,6 @@ meatBowl.src = "image/Bowl_Meat.png";
 vegBowl.src = "image/Bowl_Veg.png";
 doughBowl.src = "image/Bowl_Dough.png";
 
-//help menu
-
-
 //players
 playerImages[0][0].src = "image/Player1.png";
 playerImages[1][0].src = "image/Player2.png";
@@ -940,6 +944,36 @@ cardImages[0].src = "image/Player1_Info.png";
 cardImages[1].src = "image/Player2_Info.png";
 cardImages[2].src = "image/Player3_Info.png";
 cardImages[3].src = "image/Player4_Info.png";
+
+//help menu
+help[0].src = "image/HP01.png";
+help[1].src = "image/HP02.png";
+help[2].src = "image/HP03.png";
+help[3].src = "image/HP04.png";
+help[4].src = "image/HP05.png";
+help[5].src = "image/HP06.png";
+help[6].src = "image/HP07.png";
+help[7].src = "image/HP08.png";
+help[8].src = "image/HP09.png";
+help[9].src = "image/HP10.png";
+help[10].src = "image/HP11.png";
+help[11].src = "image/HP12.png";
+help[12].src = "image/HP13.png";
+help[13].src = "image/HP14.png";
+help[14].src = "image/HP15.png";
+help[15].src = "image/HP16.png";
+help[16].src = "image/HP17.png";
+help[17].src = "image/HP18.png";
+help[18].src = "image/HP19.png";
+help[19].src = "image/HP20.png";
+help[20].src = "image/HP21.png";
+help[21].src = "image/HP22.png";
+help[22].src = "image/HP23.png";
+help[23].src = "image/HP24.png";
+help[24].src = "image/HP25.png";
+help[25].src = "image/HP26.png";
+help[26].src = "image/HP27.png";
+
 
 //pizzas
 rawDough.src = "image/Pizza_Raw.png";
@@ -971,7 +1005,7 @@ cursorBR.src = "image/Cursor_Bottom_Right.png";
 orderCard.src = "image/Pizza_Info.png";
 
 //sound files
-// ohNo.src = "OhNo.mp3";
+ohNo.src = "OhNo.mp3";
 // bgm.src = "NoSpeakAmericano.mp3";
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------//
