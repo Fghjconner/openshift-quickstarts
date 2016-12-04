@@ -508,7 +508,7 @@ public class Engine
 							boolean impacted = false;
 							while(!impacted)
 							{
-								flightLoc = flightLoc.getAdjacent(currentPizza.flightDirection);
+								Location nextLoc = flightLoc.getAdjacent(currentPizza.flightDirection);
 								distance++;
 
 								player = getPlayerAt(flightLoc);
@@ -519,12 +519,13 @@ public class Engine
 									graphics.addCollision(currentStep, player, false);
 									impacted = true;
 								}
-								else if ((getTile(flightLoc.getAdjacent(currentPizza.flightDirection)) != Tile.EMPTY && getTile(flightLoc.getAdjacent(currentPizza.flightDirection)) != Tile.COUNTER && getTile(flightLoc.getAdjacent(currentPizza.flightDirection)) != Tile.OVEN) || getTile(flightLoc) == Tile.OVEN)
+								else if (!isValidLocation(nextLoc) || (getTile(nextLoc) != Tile.EMPTY && getTile(nextLoc) != Tile.COUNTER && getTile(nextLoc) != Tile.OVEN) || getTile(flightLoc) == Tile.OVEN)
 								{
 									setItem(flightLoc, currentPizza);
 									graphics.add(currentStep, new GraphicsCommunicationObject.FlyElement(currentLoc.x, currentLoc.y, currentPizza.flightDirection, distance, currentPizza.makeGraphicsItem()));
 									impacted = true;
 								}
+								flightLoc = nextLoc;
 							}
 						}
 						else
