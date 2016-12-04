@@ -458,7 +458,7 @@ public class Engine
 			case THROW:
 				if (currentPlayer.held instanceof Pizza && isValidLocation(targetLoc) && (getTile(targetLoc) == Tile.EMPTY || getTile(targetLoc) == Tile.COUNTER))
 				{
-					setItem(currentPlayer.loc.adjacentLoc(currentAction.direction), currentPlayer.held);
+					setItem(currentPlayer.loc.getAdjacent(currentAction.direction), currentPlayer.held);
 					((Pizza) getItem(currentPlayer.loc)).flightDirection = currentAction.direction;
 					currentPlayer.held = null;
 
