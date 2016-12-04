@@ -104,6 +104,7 @@ public class Engine
 	{
 		public Item held = null;
 		public Location loc;
+		public boolean isStunned = false;
 		
 		public Player(Location startingLoc)
 		{
@@ -282,13 +283,6 @@ public class Engine
 		Action currentAction = actions[playerNumber][currentStep];
 		Player currentPlayer = players[playerNumber];
 		Location targetLoc = players[playerNumber].loc.getAdjacent(currentAction.direction);
-		
-//		if (!isValidLocation(targetLoc))
-//		{
-//			System.out.println(targetLoc.x);
-//			System.out.println(targetLoc.y);
-//			return new GraphicsCommunicationObject.StandElement(playerNumber,  currentPlayer.loc.x, currentPlayer.loc.y, currentPlayer.makeHeldGraphicsItem());
-//		}
 
 		switch (currentAction.type)
 		{
@@ -469,7 +463,11 @@ public class Engine
 				else
 					return new GraphicsCommunicationObject.StandElement(playerNumber, currentPlayer.loc.x, currentPlayer.loc.y, currentPlayer.makeHeldGraphicsItem());
 			case STAND:
-				return new GraphicsCommunicationObject.StandElement(playerNumber,  currentPlayer.loc.x, currentPlayer.loc.y, currentPlayer.makeHeldGraphicsItem());
+			{
+				boolean stunned = currentPlayer.isStunned;
+				currentPlayer.isStunned = false;
+				return new GraphicsCommunicationObject.StandElement(playerNumber,  currentPlayer.loc.x, currentPlayer.loc.y, currentPlayer.makeHeldGraphicsItem(), stunned);
+			}
 			default:
 				return null;
 		}
@@ -565,7 +563,7 @@ public class Engine
 	{
 		if (currentStep < 3)
 		{
-			System.out.println(playerNumber);
+			players[playerNumber].isStunned = true;
 			if (actions[playerNumber][currentStep].type != ActionType.STAND)
 			{
 				for (int step = 3; step > currentStep + 1; step--)

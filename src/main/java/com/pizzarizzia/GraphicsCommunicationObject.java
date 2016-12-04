@@ -178,9 +178,18 @@ public class GraphicsCommunicationObject extends Server.OutgoingPacket
 
 	public static class StandElement extends PlayerGraphicsElement
 	{
-		public StandElement(int playerNumber, int x, int y, Item heldItem)
+		public boolean stunnedDuring;
+
+		public StandElement(int playerNumber, int x, int y, Item heldItem, boolean stunned)
 		{
 			super("stand", playerNumber, x, y, heldItem);
+
+			stunnedDuring = stunned;
+		}
+
+		public StandElement(int playerNumber, int x, int y, Item heldItem)
+		{
+			this(playerNumber, x, y, heldItem, false);
 		}
 	}
 
