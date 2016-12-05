@@ -745,8 +745,8 @@ var playGame=
 
 	start: function()	//basic window. the "rest state" for the game
 	{
-		//bgm.loop = true;
-		//bgm.play();
+		bgm.loop = true;
+		bgm.play();
 
 		var canvas = document.getElementById('Game');
 		var context = canvas.getContext('2d');
@@ -1049,7 +1049,7 @@ orderCard.src = "image/Pizza_Info.png";
 
 //sound files
 ohNo.src = "OhNo.mp3";
-// bgm.src = "NoSpeakAmericano.mp3";
+bgm.src = "NoSpeakAmericano.mp3";
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------//
 </script>
