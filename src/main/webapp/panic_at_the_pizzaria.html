@@ -42,7 +42,6 @@ canvas {
 // declaring menu grahics
 var title = new Image();
 var socket = new WebSocket("ws://test-test-project-fghj.44fs.preview.openshiftapps.com/pizzarizzia-server/game");
-// var socket = new WebSocket("ws://192.168.0.100:8080/PizzarizziaServer/game");
 var player_num = 0;
 var timerID;
 var timerCount;
@@ -356,6 +355,8 @@ var graphics =
 						graphics.drawDroppingPlayer(context, element, timeInStep); break;
 					case "sit":
 						graphics.drawSittingItem(context, element, timeInStep); break;
+					case "fly":
+						graphics.drawFlyingItem(context, element, timeInStep); break;
 					case "order":
 						graphics.drawOrder(context, element, timeInStep); break;
 					default:
@@ -372,7 +373,7 @@ var graphics =
 		var posX = 50 * (element.locationX + 1);
 		var posY = 50 * (element.locationY + 1);
 
-		graphics.drawPlayerWithIdle(context, element.player, posX, posY, element.held, element.stunnedAfter, time);
+		graphics.drawPlayerWithIdle(context, element.player, posX, posY, element.held, (time > graphics.animationLength ? element.stunnedAfter : element.stunnedDurring), time);
 	},
 
 	drawMovingPlayer: function(context, element, time)
@@ -422,6 +423,9 @@ var graphics =
 		graphics.drawStandingPlayer(context,element,time);
 	},
 
+	sittingOffsetX: 12,
+	sittingOffsetY: 0,
+
 	drawSittingItem: function(context, element, time)
 	{
 		if (element.locationY == 0 && (element.locationX == 3 || element.locationX == 4))
@@ -434,7 +438,45 @@ var graphics =
 			var posX = 50 * (element.locationX + 1);
 			var posY = 50 * (element.locationY + 1);
 
-			graphics.drawItem(context, posX + 12, posY , element.item, 25);
+			graphics.drawItem(context, posX + graphics.sittingOffsetX, posY + graphics.sittingOffsetY, element.item, 25);
+		}
+	},
+
+	maxFlyDistance: 6,
+
+	drawFlyingItem: function(context, element, time)
+	{
+		if (time <= graphics.animationLength)
+		{
+			var posX = 50 * (element.locationX + 1);
+			var posY = 50 * (element.locationY + 1);
+
+			var offset = Math.min(graphics.maxFlyDistance, element.distance) * 50 * Math.min(time / graphics.animationLength, 1);
+
+			switch(directions[element.direction])
+			{
+				case directions.UP: posY -= offset; break;
+				case directions.DOWN: posY += offset; break;
+				case directions.LEFT: posX -= offset; break;
+				case directions.RIGHT: posX += offset; break;
+			}
+
+			graphics.drawItem(context, posX + graphics.sittingOffsetX, posY + graphics.sittingOffsetY, element.item, 25);
+		}
+		else
+		{
+			var sittingElement = {};
+			sittingElement.item = element.item;
+			sittingElement.locationX = element.locationX;
+			sittingElement.locationY = element.locationY;
+			switch(directions[element.direction])
+			{
+				case directions.UP: sittingElement.locationY -= element.distance; break;
+				case directions.DOWN: sittingElement.locationY += element.distance; break;
+				case directions.LEFT: sittingElement.locationX -= element.distance; break;
+				case directions.RIGHT: sittingElement.locationX += element.distance; break;
+			}
+			graphics.drawSittingItem(context, sittingElement, time);
 		}
 	},
 
