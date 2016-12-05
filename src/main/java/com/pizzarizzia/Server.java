@@ -161,10 +161,10 @@ public class Server
 		{
 			state = ServerState.IN_ROUND;
 
-			endOfRoundTimer.schedule(new EndRoundTask(), 20000);
+			endOfRoundTimer.schedule(new EndRoundTask(), 60000);
 
 			for (int i = 0; i < getMaxPlayers(); i++)
-				sendPacketToPlayer(i, new RoundStartPacket(20));
+				sendPacketToPlayer(i, new RoundStartPacket(60));
 		}
 	}
 
